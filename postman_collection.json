@@ -1,0 +1,350 @@
+{
+  "info": {
+    "_postman_id": "news-portal-api-collection",
+    "name": "News Portal API",
+    "description": "Complete collection for News Portal REST API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3000/api/v1" },
+    { "key": "access_token", "value": "" },
+    { "key": "refresh_token", "value": "" },
+    { "key": "news_id", "value": "" },
+    { "key": "category_id", "value": "" },
+    { "key": "comment_id", "value": "" },
+    { "key": "hashtag_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 201', () => pm.response.to.have.status(201));"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/register",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testadmin\",\n  \"email\": \"testadmin@example.com\",\n  \"password\": \"Admin@12345\",\n  \"name\": \"Test\",\n  \"surname\": \"Admin\",\n  \"role\": \"ADMIN\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                "const json = pm.response.json();",
+                "pm.collectionVariables.set('access_token', json.data.accessToken);",
+                "pm.collectionVariables.set('refresh_token', json.data.refreshToken);"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"boss@newsportal.com\",\n  \"password\": \"Boss@123456\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/refresh",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] },
+            "method": "POST",
+            "url": "{{base_url}}/auth/logout",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "List Categories",
+          "request": { "method": "GET", "url": "{{base_url}}/categories" }
+        },
+        {
+          "name": "Create Category",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "const json = pm.response.json();",
+                "if (json.data) pm.collectionVariables.set('category_id', json.data.id);"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] },
+            "method": "POST",
+            "url": "{{base_url}}/categories",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Technology\"\n}" }
+          }
+        },
+        {
+          "name": "Update Category",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] },
+            "method": "PUT",
+            "url": "{{base_url}}/categories/{{category_id}}",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Tech & Science\"\n}" }
+          }
+        },
+        {
+          "name": "Delete Category",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] },
+            "method": "DELETE",
+            "url": "{{base_url}}/categories/{{category_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "News",
+      "item": [
+        {
+          "name": "List News",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/news?page=1&limit=10&sort=id_desc", "host": ["{{base_url}}"], "path": ["news"], "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "10" }, { "key": "sort", "value": "id_desc" }] } }
+        },
+        {
+          "name": "List News - Most Viewed (cached)",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/news?sort=most_viewed&limit=10", "host": ["{{base_url}}"], "path": ["news"], "query": [{ "key": "sort", "value": "most_viewed" }, { "key": "limit", "value": "10" }] } }
+        },
+        {
+          "name": "List News - By Category",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/news?category=technology", "host": ["{{base_url}}"], "path": ["news"], "query": [{ "key": "category", "value": "technology" }] } }
+        },
+        {
+          "name": "List News - By Hashtag",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/news?hashtag=breaking", "host": ["{{base_url}}"], "path": ["news"], "query": [{ "key": "hashtag", "value": "breaking" }] } }
+        },
+        {
+          "name": "List News - Search",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/news?search=technology+future", "host": ["{{base_url}}"], "path": ["news"], "query": [{ "key": "search", "value": "technology future" }] } }
+        },
+        {
+          "name": "List News - Today",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/news?time=today", "host": ["{{base_url}}"], "path": ["news"], "query": [{ "key": "time", "value": "today" }] } }
+        },
+        {
+          "name": "List News - Date Range",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/news?dateFrom=2024-01-01&dateTo=2024-12-31", "host": ["{{base_url}}"], "path": ["news"], "query": [{ "key": "dateFrom", "value": "2024-01-01" }, { "key": "dateTo", "value": "2024-12-31" }] } }
+        },
+        {
+          "name": "Get News by Slug",
+          "request": { "method": "GET", "url": "{{base_url}}/news/slug/sample-tech-news" }
+        },
+        {
+          "name": "Get News by ID (Admin)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] },
+            "method": "GET",
+            "url": "{{base_url}}/news/{{news_id}}"
+          }
+        },
+        {
+          "name": "Create News",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "const json = pm.response.json();",
+                "if (json.data) pm.collectionVariables.set('news_id', json.data.id);"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] },
+            "method": "POST",
+            "url": "{{base_url}}/news",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Breaking: New AI Model Released\",\n  \"content\": \"In a landmark announcement, researchers have unveiled a new artificial intelligence model that surpasses all previous benchmarks. The model demonstrates unprecedented capabilities in reasoning and problem-solving tasks.\",\n  \"shortDescription\": \"Researchers unveil a groundbreaking AI model with record-breaking performance.\",\n  \"categoryId\": \"{{category_id}}\",\n  \"status\": \"PUBLISHED\",\n  \"hashtags\": [\"AI\", \"Technology\", \"Breaking\"]\n}"
+            }
+          }
+        },
+        {
+          "name": "Update News",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] },
+            "method": "PUT",
+            "url": "{{base_url}}/news/{{news_id}}",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Breaking: New AI Model Released (Updated)\",\n  \"status\": \"PUBLISHED\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete News",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] },
+            "method": "DELETE",
+            "url": "{{base_url}}/news/{{news_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Comments",
+      "item": [
+        {
+          "name": "Get Comments for News",
+          "request": { "method": "GET", "url": "{{base_url}}/comments/news/{{news_id}}" }
+        },
+        {
+          "name": "Add Comment",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "const json = pm.response.json();",
+                "if (json.data) pm.collectionVariables.set('comment_id', json.data.id);"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] },
+            "method": "POST",
+            "url": "{{base_url}}/comments",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newsId\": \"{{news_id}}\",\n  \"content\": \"This is a great article! Very informative.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Comment",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] },
+            "method": "DELETE",
+            "url": "{{base_url}}/comments/{{comment_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Likes",
+      "item": [
+        {
+          "name": "Toggle Like (anonymous or auth)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/likes",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newsId\": \"{{news_id}}\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hashtags",
+      "item": [
+        {
+          "name": "List Hashtags",
+          "request": { "method": "GET", "url": "{{base_url}}/hashtags" }
+        },
+        {
+          "name": "Search Hashtags",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/hashtags?search=tech", "host": ["{{base_url}}"], "path": ["hashtags"], "query": [{ "key": "search", "value": "tech" }] } }
+        },
+        {
+          "name": "Create Hashtag",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "const json = pm.response.json();",
+                "if (json.data) pm.collectionVariables.set('hashtag_id', json.data.id);"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] },
+            "method": "POST",
+            "url": "{{base_url}}/hashtags",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"WorldNews\"\n}" }
+          }
+        },
+        {
+          "name": "Delete Hashtag",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] },
+            "method": "DELETE",
+            "url": "{{base_url}}/hashtags/{{hashtag_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Images",
+      "item": [
+        {
+          "name": "Get Images for News",
+          "request": { "method": "GET", "url": "{{base_url}}/images/news/{{news_id}}" }
+        },
+        {
+          "name": "Upload Images",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] },
+            "method": "POST",
+            "url": "{{base_url}}/images/news/{{news_id}}",
+            "body": {
+              "mode": "formdata",
+              "formdata": [{ "key": "images", "type": "file", "src": "" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": { "method": "GET", "url": "http://localhost:3000/health" }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+const Joi = require('joi');
+
+const create = Joi.object({
+  title: Joi.string().min(3).max(255).required(),
+  content: Joi.string().min(10).required(),
+  shortDescription: Joi.string().min(10).max(500).required(),
+  categoryId: Joi.string().uuid().required(),
+  status: Joi.string().valid('DRAFT', 'PUBLISHED').default('DRAFT'),
+  hashtags: Joi.array().items(Joi.string().min(1).max(50)).max(10).default([]),
+});
+
+const update = Joi.object({
+  title: Joi.string().min(3).max(255),
+  content: Joi.string().min(10),
+  shortDescription: Joi.string().min(10).max(500),
+  categoryId: Joi.string().uuid(),
+  status: Joi.string().valid('DRAFT', 'PUBLISHED', 'DELETED'),
+  hashtags: Joi.array().items(Joi.string().min(1).max(50)).max(10),
+}).min(1);
+
+const listQuery = Joi.object({
+  page: Joi.number().integer().min(1).default(1),
+  limit: Joi.number().integer().min(1).max(100).default(10),
+  status: Joi.string().valid('DRAFT', 'PUBLISHED', 'DELETED'),
+  category: Joi.string(),
+  hashtag: Joi.string(),
+  search: Joi.string().max(200),
+  sort: Joi.string().valid('most_viewed', 'most_liked', 'most_commented', 'id_desc', 'id_asc').default('id_desc'),
+  time: Joi.string().valid('today', 'this_week', 'this_month'),
+  dateFrom: Joi.date().iso(),
+  dateTo: Joi.date().iso().when('dateFrom', { is: Joi.exist(), then: Joi.date().min(Joi.ref('dateFrom')) }),
+});
+
+module.exports = { create, update, listQuery };
