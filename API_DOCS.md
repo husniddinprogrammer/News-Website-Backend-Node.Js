@@ -224,6 +224,7 @@ Authorization: Bearer <access_token>   ← (kerakli endpointlar uchun)
 | `page` | number | 1 | Sahifa raqami |
 | `limit` | number | 10 | Sahifadagi yozuvlar (max: 100) |
 | `sort` | string | `id_desc` | Tartiblash (quyida) |
+| `rank` | number | — | Rank bo'yicha filter (`0`–`10`) |
 | `category` | string | — | Kategoriya slug'i |
 | `hashtag` | string | — | Hashtag slug'i |
 | `search` | string | — | Qidiruv (title + content) |
@@ -240,6 +241,7 @@ Authorization: Bearer <access_token>   ← (kerakli endpointlar uchun)
 | `most_viewed` | Ko'p ko'rilgan (Redis cache'd!) |
 | `most_liked` | Ko'p likelangan |
 | `most_commented` | Ko'p izohli |
+| `rank_desc` | Eng yuqori rank (`10` → `0`) |
 
 **`time` qiymatlari:**
 | Qiymat | Tavsif |
@@ -258,6 +260,8 @@ GET /news?hashtag=breaking&time=today
 GET /news?search=sun+energy
 GET /news?dateFrom=2024-01-01&dateTo=2024-06-30
 GET /news?time=this_week&sort=most_commented
+GET /news?sort=rank_desc
+GET /news?sort=rank_desc&category=technology
 ```
 
 **Response `200`:**
@@ -274,6 +278,7 @@ GET /news?time=this_week&sort=most_commented
       "shortDescription": "Researchers unveil a groundbreaking AI model.",
       "status": "PUBLISHED",
       "viewCount": 1520,
+      "rank": 8,
       "likeCount": 87,
       "commentCount": 23,
       "createdAt": "2024-06-01T10:00:00.000Z",
@@ -331,6 +336,7 @@ GET /news?time=this_week&sort=most_commented
     "shortDescription": "Researchers unveil a groundbreaking AI model.",
     "status": "PUBLISHED",
     "viewCount": 1521,
+    "rank": 8,
     "likeCount": 87,
     "commentCount": 23,
     "createdAt": "2024-06-01T10:00:00.000Z",
@@ -378,6 +384,7 @@ GET /news?time=this_week&sort=most_commented
   "shortDescription": "Qisqa tavsif. 10–500 belgi oralig'ida.",
   "categoryId": "category-uuid",
   "status": "DRAFT",
+  "rank": 7,
   "hashtags": ["AI", "Technology", "Breaking"]
 }
 ```
@@ -387,6 +394,7 @@ GET /news?time=this_week&sort=most_commented
 - `content`: min 10 belgi
 - `shortDescription`: 10–500 belgi
 - `status`: `DRAFT` (default) yoki `PUBLISHED`
+- `rank`: `0`–`10` butun son (default: `0`) — tahririyat muhimlik darajasi
 - `hashtags`: max 10 ta, har biri max 50 belgi
 
 **Response `201`:**
@@ -418,6 +426,7 @@ GET /news?time=this_week&sort=most_commented
   "shortDescription": "Yangilangan qisqa tavsif.",
   "categoryId": "new-category-uuid",
   "status": "PUBLISHED",
+  "rank": 9,
   "hashtags": ["NewTag", "Updated"]
 }
 ```
@@ -822,6 +831,144 @@ RateLimit-Reset: 1717000000
 
 ---
 
+## 👤 USERS
+
+> Barcha `/users` endpointlari faqat **BOSS** role uchun.
+
+---
+
+### GET `/users` — Foydalanuvchilar ro'yxati
+
+**Auth:** Bearer token (BOSS only)
+
+**Query parameters:**
+
+| Param | Default | Tavsif |
+|-------|---------|--------|
+| `page` | 1 | Sahifa |
+| `limit` | 20 | Miqdor (max: 100) |
+| `search` | — | Username, email yoki ism bo'yicha qidiruv |
+
+**Misol so'rovlar:**
+```
+GET /users?limit=100
+GET /users?page=1&limit=20
+GET /users?search=husniddin
+```
+
+**Response `200`:**
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Success",
+  "data": [
+    {
+      "id": "uuid",
+      "username": "husniddin",
+      "email": "admin@gmail.com",
+      "role": "ADMIN",
+      "name": "Husniddin",
+      "surname": "Programmer",
+      "isBlocked": false,
+      "createdAt": "2024-06-01T10:00:00.000Z"
+    }
+  ],
+  "pagination": {
+    "total": 5,
+    "page": 1,
+    "limit": 20,
+    "totalPages": 1
+  }
+}
+```
+
+---
+
+### PATCH `/users/:id/role` — Role o'zgartirish
+
+**Auth:** Bearer token (BOSS only)
+
+**Request body:**
+```json
+{
+  "role": "BOSS"
+}
+```
+
+**Qoidalar:**
+- `role`: `ADMIN` yoki `BOSS`
+- O'z rolini o'zgartirib bo'lmaydi (`400`)
+
+**Response `200`:**
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Role updated",
+  "data": {
+    "id": "uuid",
+    "username": "husniddin",
+    "email": "admin@gmail.com",
+    "role": "BOSS",
+    "name": "Husniddin",
+    "surname": "Programmer",
+    "isBlocked": false,
+    "createdAt": "2024-06-01T10:00:00.000Z"
+  }
+}
+```
+
+---
+
+### PATCH `/users/:id/block` — Block / Unblock
+
+**Auth:** Bearer token (BOSS only)
+
+**Request body:**
+```json
+{
+  "isBlocked": true
+}
+```
+
+**Qoidalar:**
+- O'zini bloklab bo'lmaydi (`400`)
+- BOSS roleli foydalanuvchini bloklab bo'lmaydi (`403`)
+
+**Block qilish — Response `200`:**
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "User blocked",
+  "data": {
+    "id": "uuid",
+    "username": "husniddin",
+    "email": "admin@gmail.com",
+    "role": "ADMIN",
+    "isBlocked": true,
+    "createdAt": "2024-06-01T10:00:00.000Z"
+  }
+}
+```
+
+**Unblock qilish — Response `200`:**
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "User unblocked",
+  "data": {
+    "id": "uuid",
+    "isBlocked": false,
+    ...
+  }
+}
+```
+
+---
+
 ## 🌐 Health Check
 
 ```
@@ -867,3 +1014,6 @@ GET http://localhost:3000/health
 | GET | `/images/news/:newsId` | — | — | Rasmlar |
 | POST | `/images/news/:newsId` | ✅ | ADMIN/BOSS | Yuklash |
 | DELETE | `/images/:id` | ✅ | ADMIN/BOSS | O'chirish |
+| GET | `/users` | ✅ | BOSS | Foydalanuvchilar ro'yxati |
+| PATCH | `/users/:id/role` | ✅ | BOSS | Role o'zgartirish |
+| PATCH | `/users/:id/block` | ✅ | BOSS | Block/unblock |

@@ -7,6 +7,7 @@ const NEWS_SELECT = {
   shortDescription: true,
   status: true,
   viewCount: true,
+  rank: true,
   createdAt: true,
   updatedAt: true,
   category: { select: { id: true, name: true, slug: true } },

@@ -29,9 +29,9 @@ const config = {
     indexNews: process.env.ELASTICSEARCH_INDEX_NEWS || 'news',
   },
   rateLimit: {
-    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 900000,
-    max: parseInt(process.env.RATE_LIMIT_MAX, 10) || 100,
-    authMax: parseInt(process.env.AUTH_RATE_LIMIT_MAX, 10) || 10,
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS, 100) || 900000,
+    max: parseInt(process.env.RATE_LIMIT_MAX, 10) || 1000,
+    authMax: parseInt(process.env.AUTH_RATE_LIMIT_MAX, 100) || 100,
   },
   upload: {
     dir: process.env.UPLOAD_DIR || 'uploads',

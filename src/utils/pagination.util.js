@@ -54,6 +54,7 @@ function buildOrderBy(sort) {
     most_viewed: { viewCount: 'desc' },
     most_liked: { likes: { _count: 'desc' } },
     most_commented: { comments: { _count: 'desc' } },
+    rank_desc: { rank: 'desc' },
     id_desc: { createdAt: 'desc' },
     id_asc: { createdAt: 'asc' },
   };

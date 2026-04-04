@@ -2,12 +2,9 @@ const prisma = require('../../config/database');
 const { AppError } = require('../../middleware/error.middleware');
 const { generateUniqueSlug, generateSlug } = require('../../utils/slug.util');
 const { parsePagination, buildDateFilter, buildOrderBy } = require('../../utils/pagination.util');
-const { cacheGet, cacheSet, cacheDelPattern } = require('../../config/redis');
 const { indexNewsDocument, deleteNewsDocument, searchNews } = require('../../config/elasticsearch');
 const config = require('../../config');
 const repo = require('./news.repository');
-
-const TOP_NEWS_KEY = 'top_news:';
 
 async function getAll(query, user) {
   const { page, limit, skip } = parsePagination(query);
@@ -19,19 +16,6 @@ async function getAll(query, user) {
 
   const where = _buildWhere(query, user);
   const orderBy = buildOrderBy(query.sort);
-
-  // Cache top-news (most_viewed, published, no other filters)
-  const isTopNews = query.sort === 'most_viewed' && !query.category && !query.hashtag && !query.time && !query.dateFrom;
-  if (isTopNews && page === 1) {
-    const cacheKey = `${TOP_NEWS_KEY}limit:${limit}`;
-    const cached = await cacheGet(cacheKey);
-    if (cached) return cached;
-
-    const result = await repo.findMany({ where, orderBy, skip, take: limit });
-    const response = { data: _formatMany(result.data), total: result.total, page, limit };
-    await cacheSet(cacheKey, response, config.topNewsCacheTtl);
-    return response;
-  }
 
   const result = await repo.findMany({ where, orderBy, skip, take: limit });
   return { data: _formatMany(result.data), total: result.total, page, limit };
@@ -82,7 +66,6 @@ async function create(dto, authorId) {
   // Index in Elasticsearch (non-blocking)
   const full = await repo.findById(news.id);
   indexNewsDocument(full).catch(() => {});
-  await cacheDelPattern(`${TOP_NEWS_KEY}*`);
 
   return _formatOne(full);
 }
@@ -105,6 +88,7 @@ async function update(id, dto, user) {
   if (dto.shortDescription !== undefined) updateData.shortDescription = dto.shortDescription;
   if (dto.categoryId !== undefined) updateData.categoryId = dto.categoryId;
   if (dto.status !== undefined) updateData.status = dto.status;
+  if (dto.rank !== undefined) updateData.rank = dto.rank;
 
   const updated = await prisma.$transaction(async (tx) => {
     const u = await tx.news.update({ where: { id }, data: updateData });
@@ -122,7 +106,6 @@ async function update(id, dto, user) {
 
   const full = await repo.findById(updated.id);
   indexNewsDocument(full).catch(() => {});
-  await cacheDelPattern(`${TOP_NEWS_KEY}*`);
 
   return _formatOne(full);
 }
@@ -137,7 +120,6 @@ async function remove(id, user) {
 
   await repo.update(id, { status: 'DELETED' });
   deleteNewsDocument(id).catch(() => {});
-  await cacheDelPattern(`${TOP_NEWS_KEY}*`);
 }
 
 // ── Private helpers ───────────────────────────────────────────────────────────

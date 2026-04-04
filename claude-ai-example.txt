@@ -1,0 +1,197 @@
+1-TASK
+You are a senior backend engineer. Build a production-ready backend using Node.js, Express.js, and PostgreSQL.
+
+Project: News Portal API
+
+Requirements:
+
+1. Tech Stack:
+- Node.js (latest LTS)
+- Express.js
+- PostgreSQL
+- ORM: Prisma (preferred) or Sequelize
+- Authentication: JWT (access + refresh tokens)
+- Validation: Joi or Zod
+- Password hashing: bcrypt
+- Logging: Winston or Pino
+- Environment config: dotenv
+- API documentation: Swagger
+-  Redis caching (for top news) 
+-  ElasticSearch (for search) 
+-  Rate limiting (DDoS protection)
+2. Architecture:
+- Use clean architecture (Controller → Service → Repository pattern)
+- Use modular folder structure
+- Apply SOLID principles
+- Separate routes, controllers, services, and database logic
+- Use middleware for auth, error handling, validation
+
+3. Database Design:
+
+User:
+- id (PK)
+- username (unique)
+- email (unique)
+- password (hashed)
+- role (enum: BOSS, ADMIN)
+- name
+- surname
+- isBlocked (boolean)
+- createdAt
+
+News:
+- id
+- title
+- slug (unique)
+- content
+- shortDescription
+- categoryId (FK)
+- author_id (FK User)
+- status (enum: DRAFT, PUBLISHED, DELETED)
+- viewCount (default 0)
+- createdAt
+- updatedAt
+
+Category:
+- id
+- name
+- slug (unique)
+- isDeleted (boolean)
+
+Comment:
+- id
+- newsId (FK)
+- userId (FK)
+- content
+- username (denormalized)
+- createdAt
+- isDeleted
+
+Likes:
+- id
+- userId (nullable)
+- newsId
+- ipAddress
+- createdAt
+- UNIQUE(userId, newsId, ipAddress)
+
+Views:
+- id
+- newsId
+- ipAddress
+- createdAt
+
+Hashtags:
+- id
+- name
+- slug
+
+HashtagNews:
+- id
+- hashtagId
+- newsId
+- isDeleted
+
+Images:
+- id
+- newsId
+- url
+- isDeleted
+
+4. Features:
+
+AUTH:
+- Register / Login / Refresh token
+- Role-based access (BOSS, ADMIN)
+
+NEWS:
+- CRUD (only ADMIN/BOSS)
+- Slug auto-generation
+- Status management (draft/publish/delete)
+- Pagination
+
+FILTERS:
+- Time-based:
+  - today
+  - this week
+  - this month
+  - custom date range
+- Sorting:
+  - most viewed
+  - most liked
+  - most commented
+  - id_desc / id_asc
+- Filtering:
+  - category
+  - hashtag
+- Search:
+  - title + content full-text search
+
+ENGAGEMENT:
+- Add/remove like (prevent duplicates via IP + user)
+- Count likes
+- Track views (by IP)
+
+COMMENTS:
+- Add comment
+- Soft delete comment
+- Count comments per news
+
+HASHTAGS:
+- Attach hashtags to news
+- Filter by hashtag
+
+IMAGES:
+- Upload (local or cloud e.g. AWS S3)
+- Soft delete
+
+5. Advanced Requirements:
+
+- Use transactions where needed
+- Use database indexing for performance:
+  - slug
+  - createdAt
+  - categoryId
+- Use caching (Redis optional)
+- Prevent duplicate views (same IP within time window)
+- Rate limiting middleware
+
+6. API Endpoints:
+
+Auth:
+POST /auth/register
+POST /auth/login
+POST /auth/refresh
+
+News:
+GET /news
+GET /news/:slug
+POST /news
+PUT /news/:id
+DELETE /news/:id
+
+Filters:
+GET /news?time=today
+GET /news?sort=most_viewed
+GET /news?category=slug
+GET /news?hashtag=slug
+GET /news?search=query
+
+Comments:
+POST /comments
+DELETE /comments/:id
+
+Likes:
+POST /likes
+DELETE /likes
+
+7. Output:
+- Full folder structure
+- Prisma schema
+- All controllers, services, routes
+- Middleware (auth, error handler)
+- Sample .env
+- Example queries (SQL if needed)
+- Postman collection
+
+Make code production-level, clean, scalable, and optimized.

@@ -23,7 +23,11 @@ async function createUser(data) {
 }
 
 async function saveRefreshToken(userId, token, expiresAt) {
-  return prisma.refreshToken.create({ data: { userId, token, expiresAt } });
+  return prisma.refreshToken.upsert({
+    where: { token },
+    update: { userId, expiresAt },
+    create: { userId, token, expiresAt },
+  });
 }
 
 async function findRefreshToken(token) {
@@ -31,7 +35,7 @@ async function findRefreshToken(token) {
 }
 
 async function deleteRefreshToken(token) {
-  return prisma.refreshToken.delete({ where: { token } });
+  return prisma.refreshToken.deleteMany({ where: { token } });
 }
 
 async function deleteAllUserRefreshTokens(userId) {

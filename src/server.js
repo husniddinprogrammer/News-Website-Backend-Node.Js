@@ -4,7 +4,6 @@ const app = require('./app');
 const config = require('./config');
 const logger = require('./utils/logger');
 const prisma = require('./config/database');
-const { connectRedis } = require('./config/redis');
 const { connectElasticsearch } = require('./config/elasticsearch');
 
 const server = http.createServer(app);
@@ -16,7 +15,6 @@ async function start() {
     logger.info('PostgreSQL connected');
 
     // Optional services (non-fatal)
-    await connectRedis();
     await connectElasticsearch();
 
     server.listen(config.app.port, () => {

@@ -1,12 +1,11 @@
 const rateLimit = require('express-rate-limit');
-const config = require('../config');
 
 /**
  * General API rate limiter.
  */
 const apiLimiter = rateLimit({
-  windowMs: config.rateLimit.windowMs,
-  max: config.rateLimit.max,
+  windowMs: 60 * 1000, // 1 minute
+  max: 500,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -22,7 +21,7 @@ const apiLimiter = rateLimit({
  */
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: config.rateLimit.authMax,
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -39,7 +38,7 @@ const authLimiter = rateLimit({
  */
 const publicLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 60,
+  max: 300,
   standardHeaders: true,
   legacyHeaders: false,
   message: {

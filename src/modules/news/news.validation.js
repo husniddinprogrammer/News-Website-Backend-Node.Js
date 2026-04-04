@@ -6,6 +6,7 @@ const create = Joi.object({
   shortDescription: Joi.string().min(10).max(500).required(),
   categoryId: Joi.string().uuid().required(),
   status: Joi.string().valid('DRAFT', 'PUBLISHED').default('DRAFT'),
+  rank: Joi.number().integer().min(0).max(10).default(0),
   hashtags: Joi.array().items(Joi.string().min(1).max(50)).max(10).default([]),
 });
 
@@ -15,6 +16,7 @@ const update = Joi.object({
   shortDescription: Joi.string().min(10).max(500),
   categoryId: Joi.string().uuid(),
   status: Joi.string().valid('DRAFT', 'PUBLISHED', 'DELETED'),
+  rank: Joi.number().integer().min(0).max(10),
   hashtags: Joi.array().items(Joi.string().min(1).max(50)).max(10),
 }).min(1);
 
@@ -25,7 +27,7 @@ const listQuery = Joi.object({
   category: Joi.string(),
   hashtag: Joi.string(),
   search: Joi.string().max(200),
-  sort: Joi.string().valid('most_viewed', 'most_liked', 'most_commented', 'id_desc', 'id_asc').default('id_desc'),
+  sort: Joi.string().valid('most_viewed', 'most_liked', 'most_commented', 'rank_desc', 'id_desc', 'id_asc').default('id_desc'),
   time: Joi.string().valid('today', 'this_week', 'this_month'),
   dateFrom: Joi.date().iso(),
   dateTo: Joi.date().iso().when('dateFrom', { is: Joi.exist(), then: Joi.date().min(Joi.ref('dateFrom')) }),

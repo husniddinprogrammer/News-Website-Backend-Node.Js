@@ -36,6 +36,21 @@ async function main() {
     },
   });
 
+  // Create sample user
+  const husniddinPassword = await bcrypt.hash('husniddin2003', 12);
+  await prisma.user.upsert({
+    where: { email: 'admin@gmail.com' },
+    update: {},
+    create: {
+      username: 'husniddin',
+      email: 'admin@gmail.com',
+      password: husniddinPassword,
+      role: 'ADMIN',
+      name: 'Husniddin',
+      surname: 'Programmer',
+    },
+  });
+
   // Create categories
   const tech = await prisma.category.upsert({
     where: { slug: 'technology' },
@@ -72,8 +87,9 @@ async function main() {
   });
 
   console.log('Seed complete.');
-  console.log('Boss credentials: boss@newsportal.com / Boss@123456');
-  console.log('Admin credentials: admin@newsportal.com / Admin@123456');
+  console.log('Boss credentials:     boss@newsportal.com / Boss@123456');
+  console.log('Admin credentials:    admin@newsportal.com / Admin@123456');
+  console.log('Sample credentials:   admin@gmail.com / husniddin2003');
 }
 
 main()

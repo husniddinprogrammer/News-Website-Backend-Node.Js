@@ -20,6 +20,7 @@ const commentRoutes = require('./modules/comments/comments.routes');
 const likeRoutes = require('./modules/likes/likes.routes');
 const hashtagRoutes = require('./modules/hashtags/hashtags.routes');
 const imageRoutes = require('./modules/images/images.routes');
+const userRoutes = require('./modules/users/users.routes');
 
 const app = express();
 
@@ -48,7 +49,11 @@ app.use(
 );
 
 // ── Static files ──────────────────────────────────────────────────────────────
-app.use(`/${config.upload.dir}`, express.static(path.resolve(config.upload.dir)));
+app.use(
+  `/${config.upload.dir}`,
+  (_req, res, next) => { res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin'); next(); },
+  express.static(path.resolve(config.upload.dir))
+);
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => {
@@ -71,6 +76,7 @@ app.use(`${prefix}/comments`, commentRoutes);
 app.use(`${prefix}/likes`, likeRoutes);
 app.use(`${prefix}/hashtags`, hashtagRoutes);
 app.use(`${prefix}/images`, imageRoutes);
+app.use(`${prefix}/users`, userRoutes);
 
 // ── Error handling ────────────────────────────────────────────────────────────
 app.use(notFound);
