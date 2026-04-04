@@ -52,6 +52,7 @@ async function create(dto, authorId) {
         categoryId: dto.categoryId,
         authorId,
         status: dto.status || 'DRAFT',
+        rank: dto.rank ?? 0,
       },
     });
 

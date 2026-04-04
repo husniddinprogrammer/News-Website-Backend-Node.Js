@@ -118,7 +118,7 @@ async function searchNews(query, from = 0, size = 10) {
             {
               multi_match: {
                 query,
-                fields: ['title^2', 'content', 'shortDescription'],
+                fields: ['title'],
                 type: 'best_fields',
                 fuzziness: 'AUTO',
               },
