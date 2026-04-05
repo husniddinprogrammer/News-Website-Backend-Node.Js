@@ -53,7 +53,7 @@ app.use(
 app.use(
   `/${config.upload.dir}`,
   (_req, res, next) => { res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin'); next(); },
-  express.static(path.resolve(config.upload.dir))
+  express.static(path.resolve(__dirname, '..', config.upload.dir))
 );
 
 // ── Health check ──────────────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 const { Router } = require('express');
 const controller = require('./comments.controller');
 const { validate } = require('../../middleware/validate.middleware');
-const { authenticate } = require('../../middleware/auth.middleware');
+const { authenticate, optionalAuth } = require('../../middleware/auth.middleware');
 const v = require('./comments.validation');
 
 const router = Router();
@@ -35,7 +35,7 @@ const router = Router();
  *       200:
  *         description: Paginated comments
  */
-router.get('/', validate(v.allQuery, 'query'), controller.getAll);
+router.get('/', optionalAuth, validate(v.allQuery, 'query'), controller.getAll);
 router.get('/news/:newsId', validate(v.listQuery, 'query'), controller.getByNews);
 
 /**

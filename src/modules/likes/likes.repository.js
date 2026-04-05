@@ -1,15 +1,13 @@
 const prisma = require('../../config/database');
 
 async function findLike(newsId, userId, ipAddress) {
-  return prisma.like.findFirst({
-    where: {
-      newsId,
-      OR: [
-        ...(userId ? [{ userId }] : []),
-        { ipAddress },
-      ],
-    },
-  });
+  // Authenticated user: match by userId only (one like per user per news)
+  // Anonymous user: match by ipAddress only (one like per IP per news)
+  const where = userId
+    ? { newsId, userId }
+    : { newsId, userId: null, ipAddress };
+
+  return prisma.like.findFirst({ where });
 }
 
 async function create(data) {

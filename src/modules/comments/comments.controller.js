@@ -3,7 +3,7 @@ const { success, created, noContent, paginated } = require('../../utils/response
 
 async function getAll(req, res, next) {
   try {
-    const result = await svc.getAll(req.query);
+    const result = await svc.getAll(req.query, req.user);
     paginated(res, result);
   } catch (err) { next(err); }
 }

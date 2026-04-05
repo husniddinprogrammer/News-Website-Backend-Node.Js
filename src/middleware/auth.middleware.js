@@ -74,7 +74,7 @@ async function optionalAuth(req, _res, next) {
  */
 function viewerReadOnly(req, res, next) {
   if (req.user?.role === 'VIEWER' && req.method !== 'GET') {
-    return error(res, 'VIEWER role faqat GET so\'rovlar yuborishi mumkin', 403);
+    return error(res, 'VIEWER role is read-only. Only GET requests are allowed.', 403);
   }
   next();
 }

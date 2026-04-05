@@ -3,10 +3,12 @@ const prisma = require('../../config/database');
 const { parsePagination } = require('../../utils/pagination.util');
 const repo = require('./comments.repository');
 
-async function getAll(query) {
+async function getAll(query, user) {
   const { page, limit, skip } = parsePagination(query);
   const orderBy = query.sort === 'id_asc' ? { createdAt: 'asc' } : { createdAt: 'desc' };
-  const result = await repo.findAll(skip, limit, orderBy);
+  // BOSS/ADMIN see all comments; others only see comments on PUBLISHED news
+  const onlyPublished = !user || (user.role !== 'BOSS' && user.role !== 'ADMIN');
+  const result = await repo.findAll(skip, limit, orderBy, onlyPublished);
   return { ...result, page, limit };
 }
 

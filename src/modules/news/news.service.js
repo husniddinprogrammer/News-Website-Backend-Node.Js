@@ -151,17 +151,18 @@ async function _searchViaEs(query, page, limit, skip) {
 async function _trackView(newsId, ipAddress) {
   const windowStart = new Date(Date.now() - config.viewDedupMinutes * 60 * 1000);
 
-  const alreadyViewed = await prisma.view.findFirst({
-    where: { newsId, ipAddress, createdAt: { gte: windowStart } },
-    select: { id: true },
-  });
+  // Atomic: check + insert inside one transaction to prevent race condition
+  await prisma.$transaction(async (tx) => {
+    const alreadyViewed = await tx.view.findFirst({
+      where: { newsId, ipAddress, createdAt: { gte: windowStart } },
+      select: { id: true },
+    });
 
-  if (!alreadyViewed) {
-    await prisma.$transaction([
-      prisma.view.create({ data: { newsId, ipAddress } }),
-      prisma.news.update({ where: { id: newsId }, data: { viewCount: { increment: 1 } } }),
-    ]);
-  }
+    if (!alreadyViewed) {
+      await tx.view.create({ data: { newsId, ipAddress } });
+      await tx.news.update({ where: { id: newsId }, data: { viewCount: { increment: 1 } } });
+    }
+  });
 }
 
 async function _upsertHashtags(tx, newsId, hashtags) {

@@ -3,28 +3,33 @@ const fs = require('fs');
 const sharp = require('sharp');
 const prisma = require('../../config/database');
 const { AppError } = require('../../middleware/error.middleware');
+const logger = require('../../utils/logger');
 const config = require('../../config');
 const repo = require('./images.repository');
 
 const COMPRESS_THRESHOLD = 100 * 1024; // 100 KB
+// Absolute path — safe regardless of CWD at runtime
+const UPLOAD_DIR = path.resolve(__dirname, '..', '..', '..', config.upload.dir);
 
 async function compressIfNeeded(file) {
   if (file.size <= COMPRESS_THRESHOLD) return file.filename;
 
   const ext = path.extname(file.filename).toLowerCase();
-  const inputPath = path.resolve(config.upload.dir, file.filename);
+  const inputPath = path.join(UPLOAD_DIR, file.filename);
+  const tmpPath = inputPath + '.tmp';
 
-  if (ext === '.png') {
-    await sharp(inputPath)
-      .png({ quality: 80, compressionLevel: 9 })
-      .toFile(inputPath + '.tmp');
-  } else {
-    await sharp(inputPath)
-      .jpeg({ quality: 80, mozjpeg: true })
-      .toFile(inputPath + '.tmp');
+  try {
+    if (ext === '.png') {
+      await sharp(inputPath).png({ quality: 80, compressionLevel: 9 }).toFile(tmpPath);
+    } else {
+      await sharp(inputPath).jpeg({ quality: 80, mozjpeg: true }).toFile(tmpPath);
+    }
+    fs.renameSync(tmpPath, inputPath);
+  } catch (err) {
+    // Remove tmp if it exists, keep original
+    if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath);
+    logger.warn({ err: err.message, file: file.filename }, 'Image compression failed, using original');
   }
-
-  fs.renameSync(inputPath + '.tmp', inputPath);
 
   return file.filename;
 }

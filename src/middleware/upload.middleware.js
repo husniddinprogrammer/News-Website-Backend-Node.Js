@@ -3,9 +3,11 @@ const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const config = require('../config');
 
+const UPLOAD_DIR = path.resolve(__dirname, '..', '..', config.upload.dir);
+
 const storage = multer.diskStorage({
   destination(_req, _file, cb) {
-    cb(null, path.resolve(config.upload.dir));
+    cb(null, UPLOAD_DIR);
   },
   filename(_req, file, cb) {
     const ext = path.extname(file.originalname).toLowerCase();

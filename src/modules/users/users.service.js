@@ -22,7 +22,7 @@ async function updateBlocked(id, isBlocked, currentUser) {
 
   const user = await repo.findById(id);
   if (!user) throw new AppError('User not found', 404);
-  if (user.role === 'BOSS') throw new AppError('BOSS foydalanuvchini bloklash mumkin emas', 403);
+  if (user.role === 'BOSS') throw new AppError('Cannot block a BOSS user', 403);
 
   return repo.updateBlocked(id, isBlocked);
 }
