@@ -1,7 +1,8 @@
 const prisma = require('../../config/database');
 const { AppError } = require('../../middleware/error.middleware');
 const { generateUniqueSlug, generateSlug } = require('../../utils/slug.util');
-const { parsePagination, buildDateFilter, buildOrderBy } = require('../../utils/pagination.util');
+const { parsePagination } = require('../../utils/pagination.util');
+const { buildNewsFilter } = require('../../utils/newsFilter.util');
 const { indexNewsDocument, deleteNewsDocument, searchNews } = require('../../config/elasticsearch');
 const config = require('../../config');
 const repo = require('./news.repository');
@@ -14,8 +15,7 @@ async function getAll(query, user) {
     return _searchViaEs(query.search, page, limit, skip);
   }
 
-  const where = _buildWhere(query, user);
-  const orderBy = buildOrderBy(query.sort);
+  const { where, orderBy } = buildNewsFilter(query, user);
 
   const result = await repo.findMany({ where, orderBy, skip, take: limit });
   return { data: _formatMany(result.data), total: result.total, page, limit };
@@ -125,33 +125,6 @@ async function remove(id, user) {
 
 // ── Private helpers ───────────────────────────────────────────────────────────
 
-function _buildWhere(query, user) {
-  const where = {};
-
-  // Non-admin users only see PUBLISHED
-  if (!user || (user.role !== 'ADMIN' && user.role !== 'BOSS')) {
-    where.status = 'PUBLISHED';
-  } else if (query.status) {
-    where.status = query.status;
-  } else {
-    where.NOT = { status: 'DELETED' };
-  }
-
-  const dateFilter = buildDateFilter(query);
-  if (dateFilter) where.createdAt = dateFilter;
-
-  if (query.category) {
-    where.category = { slug: query.category };
-  }
-
-  if (query.hashtag) {
-    where.hashtags = {
-      some: { isDeleted: false, hashtag: { slug: query.hashtag } },
-    };
-  }
-
-  return where;
-}
 
 async function _searchViaEs(query, page, limit, skip) {
   const esResult = await searchNews(query, skip, limit);

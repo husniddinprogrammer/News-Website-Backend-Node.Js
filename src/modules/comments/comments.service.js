@@ -3,6 +3,13 @@ const prisma = require('../../config/database');
 const { parsePagination } = require('../../utils/pagination.util');
 const repo = require('./comments.repository');
 
+async function getAll(query) {
+  const { page, limit, skip } = parsePagination(query);
+  const orderBy = query.sort === 'id_asc' ? { createdAt: 'asc' } : { createdAt: 'desc' };
+  const result = await repo.findAll(skip, limit, orderBy);
+  return { ...result, page, limit };
+}
+
 async function getByNews(newsId, query) {
   const news = await prisma.news.findUnique({ where: { id: newsId }, select: { id: true, status: true } });
   if (!news || news.status === 'DELETED') throw new AppError('News not found', 404);
@@ -39,4 +46,4 @@ async function remove(id, user) {
   await repo.softDelete(id);
 }
 
-module.exports = { getByNews, create, remove };
+module.exports = { getAll, getByNews, create, remove };

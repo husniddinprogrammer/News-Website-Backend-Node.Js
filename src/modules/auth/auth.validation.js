@@ -13,7 +13,7 @@ const register = Joi.object({
     }),
   name: Joi.string().min(1).max(50).required(),
   surname: Joi.string().min(1).max(50).required(),
-  role: Joi.string().valid('ADMIN', 'BOSS').default('ADMIN'),
+  role: Joi.string().valid('ADMIN', 'BOSS', 'VIEWER').default('ADMIN'),
 });
 
 const login = Joi.object({

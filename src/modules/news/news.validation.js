@@ -24,8 +24,8 @@ const listQuery = Joi.object({
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(1).max(100).default(10),
   status: Joi.string().valid('DRAFT', 'PUBLISHED', 'DELETED'),
-  category: Joi.string(),
-  hashtag: Joi.string(),
+  category: Joi.string().max(100),  // 'all' yoki category slug
+  hashtag: Joi.string().max(100),   // 'all' yoki hashtag slug
   search: Joi.string().max(200),
   sort: Joi.string().valid('most_viewed', 'most_liked', 'most_commented', 'rank_desc', 'id_desc', 'id_asc').default('id_desc'),
   time: Joi.string().valid('today', 'this_week', 'this_month'),

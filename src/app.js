@@ -11,6 +11,7 @@ const logger = require('./utils/logger');
 const swaggerSpec = require('./config/swagger');
 const { apiLimiter } = require('./middleware/rateLimiter.middleware');
 const { notFound, globalErrorHandler } = require('./middleware/error.middleware');
+const { viewerReadOnly } = require('./middleware/auth.middleware');
 
 // Route modules
 const authRoutes = require('./modules/auth/auth.routes');
@@ -66,6 +67,9 @@ app.get('/api-docs.json', (_req, res) => res.json(swaggerSpec));
 
 // ── Global rate limiter ───────────────────────────────────────────────────────
 app.use(config.app.apiPrefix, apiLimiter);
+
+// ── VIEWER: faqat GET ─────────────────────────────────────────────────────────
+app.use(config.app.apiPrefix, viewerReadOnly);
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 const prefix = config.app.apiPrefix;

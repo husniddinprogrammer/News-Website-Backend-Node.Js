@@ -29,4 +29,25 @@ async function softDelete(id) {
   return prisma.comment.update({ where: { id }, data: { isDeleted: true } });
 }
 
-module.exports = { findByNews, findById, create, softDelete };
+async function findAll(skip, take, orderBy) {
+  const [data, total] = await prisma.$transaction([
+    prisma.comment.findMany({
+      where: { isDeleted: false },
+      orderBy,
+      skip,
+      take,
+      select: {
+        id: true,
+        content: true,
+        username: true,
+        createdAt: true,
+        userId: true,
+        newsId: true,
+      },
+    }),
+    prisma.comment.count({ where: { isDeleted: false } }),
+  ]);
+  return { data, total };
+}
+
+module.exports = { findAll, findByNews, findById, create, softDelete };

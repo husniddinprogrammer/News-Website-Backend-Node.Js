@@ -35,6 +35,7 @@ const router = Router();
  *       200:
  *         description: Paginated comments
  */
+router.get('/', validate(v.allQuery, 'query'), controller.getAll);
 router.get('/news/:newsId', validate(v.listQuery, 'query'), controller.getByNews);
 
 /**

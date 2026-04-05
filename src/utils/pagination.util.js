@@ -22,7 +22,7 @@ function buildDateFilter(query) {
 
   if (query.time === 'this_week') {
     const start = new Date(now);
-    start.setDate(now.getDate() - now.getDay());
+    start.setDate(now.getDate() - 6);
     start.setHours(0, 0, 0, 0);
     return { gte: start };
   }
