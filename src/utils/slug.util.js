@@ -1,5 +1,7 @@
 const slugify = require('slugify');
-const prisma = require('../config/database');
+const { eq, and, ne } = require('drizzle-orm');
+const { db } = require('../db');
+const { news } = require('../db/schema');
 
 /**
  * Generate a unique slug from a string.
@@ -11,13 +13,11 @@ async function generateUniqueSlug(text, excludeId = null) {
   let counter = 1;
 
   while (true) {
-    const existing = await prisma.news.findFirst({
-      where: {
-        slug,
-        ...(excludeId ? { NOT: { id: excludeId } } : {}),
-      },
-      select: { id: true },
-    });
+    const where = excludeId
+      ? and(eq(news.slug, slug), ne(news.id, excludeId))
+      : eq(news.slug, slug);
+
+    const [existing] = await db.select({ id: news.id }).from(news).where(where).limit(1);
 
     if (!existing) break;
     slug = `${base}-${counter}`;

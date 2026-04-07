@@ -1,25 +1,28 @@
-const prisma = require('../../config/database');
+const { eq, and, count, isNull } = require('drizzle-orm');
+const { db } = require('../../db');
+const { likes } = require('../../db/schema');
 
 async function findLike(newsId, userId, ipAddress) {
-  // Authenticated user: match by userId only (one like per user per news)
-  // Anonymous user: match by ipAddress only (one like per IP per news)
   const where = userId
-    ? { newsId, userId }
-    : { newsId, userId: null, ipAddress };
+    ? and(eq(likes.newsId, newsId), eq(likes.userId, userId))
+    : and(eq(likes.newsId, newsId), isNull(likes.userId), eq(likes.ipAddress, ipAddress));
 
-  return prisma.like.findFirst({ where });
+  const [row] = await db.select().from(likes).where(where).limit(1);
+  return row || null;
 }
 
 async function create(data) {
-  return prisma.like.create({ data });
+  const [row] = await db.insert(likes).values(data).returning();
+  return row;
 }
 
 async function remove(id) {
-  return prisma.like.delete({ where: { id } });
+  return db.delete(likes).where(eq(likes.id, id));
 }
 
 async function countByNews(newsId) {
-  return prisma.like.count({ where: { newsId } });
+  const [{ total }] = await db.select({ total: count() }).from(likes).where(eq(likes.newsId, newsId));
+  return Number(total);
 }
 
 module.exports = { findLike, create, remove, countByNews };

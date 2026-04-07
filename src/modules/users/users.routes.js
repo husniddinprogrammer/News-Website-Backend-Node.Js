@@ -48,7 +48,7 @@ router.get('/', authenticate, authorize('BOSS'), validate(v.listQuery, 'query'),
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string, format: uuid }
+ *         schema: { type: integer }
  *     requestBody:
  *       required: true
  *       content:
@@ -80,7 +80,7 @@ router.patch('/:id/role', authenticate, authorize('BOSS'), validate(v.updateRole
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string, format: uuid }
+ *         schema: { type: integer }
  *     requestBody:
  *       required: true
  *       content:

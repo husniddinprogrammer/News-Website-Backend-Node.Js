@@ -23,7 +23,7 @@ const router = Router();
  *       - in: path
  *         name: newsId
  *         required: true
- *         schema: { type: string, format: uuid }
+ *         schema: { type: integer }
  *     responses:
  *       200:
  *         description: List of images
@@ -40,7 +40,7 @@ router.get('/news/:newsId', controller.getByNews);
  *       - in: path
  *         name: newsId
  *         required: true
- *         schema: { type: string, format: uuid }
+ *         schema: { type: integer }
  *     requestBody:
  *       required: true
  *       content:
@@ -75,7 +75,7 @@ router.post(
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string, format: uuid }
+ *         schema: { type: integer }
  *     responses:
  *       204:
  *         description: Deleted

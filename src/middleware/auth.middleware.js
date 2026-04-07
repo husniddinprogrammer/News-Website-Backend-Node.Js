@@ -1,6 +1,13 @@
 const { verifyAccessToken } = require('../utils/jwt.util');
-const prisma = require('../config/database');
+const { eq } = require('drizzle-orm');
+const { db } = require('../db');
+const { users } = require('../db/schema');
 const { error } = require('../utils/response.util');
+
+const USER_SELECT = {
+  id: users.id, username: users.username, email: users.email,
+  role: users.role, isBlocked: users.isBlocked,
+};
 
 /**
  * Verify JWT access token and attach user to req.user.
@@ -15,10 +22,7 @@ async function authenticate(req, res, next) {
   try {
     const decoded = verifyAccessToken(token);
 
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.sub },
-      select: { id: true, username: true, email: true, role: true, isBlocked: true },
-    });
+    const [user] = await db.select(USER_SELECT).from(users).where(eq(users.id, decoded.sub)).limit(1);
 
     if (!user) return error(res, 'User not found', 401);
     if (user.isBlocked) return error(res, 'Account is blocked', 403);
@@ -57,10 +61,7 @@ async function optionalAuth(req, _res, next) {
   try {
     const token = authHeader.slice(7);
     const decoded = verifyAccessToken(token);
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.sub },
-      select: { id: true, username: true, email: true, role: true, isBlocked: true },
-    });
+    const [user] = await db.select(USER_SELECT).from(users).where(eq(users.id, decoded.sub)).limit(1);
     if (user && !user.isBlocked) req.user = user;
   } catch {
     // intentionally ignored

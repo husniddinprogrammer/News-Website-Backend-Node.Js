@@ -1,7 +1,7 @@
 const Joi = require('joi');
 
 const toggle = Joi.object({
-  newsId: Joi.string().uuid().required(),
+  newsId: Joi.number().integer().positive().required(),
 });
 
 module.exports = { toggle };

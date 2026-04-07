@@ -1,5 +1,7 @@
+const { eq } = require('drizzle-orm');
+const { db } = require('../../db');
+const { news } = require('../../db/schema');
 const { AppError } = require('../../middleware/error.middleware');
-const prisma = require('../../config/database');
 const { parsePagination } = require('../../utils/pagination.util');
 const repo = require('./comments.repository');
 
@@ -13,8 +15,8 @@ async function getAll(query, user) {
 }
 
 async function getByNews(newsId, query) {
-  const news = await prisma.news.findUnique({ where: { id: newsId }, select: { id: true, status: true } });
-  if (!news || news.status === 'DELETED') throw new AppError('News not found', 404);
+  const [item] = await db.select({ id: news.id, status: news.status }).from(news).where(eq(news.id, newsId)).limit(1);
+  if (!item || item.status === 'DELETED') throw new AppError('News not found', 404);
 
   const { page, limit, skip } = parsePagination(query);
   const result = await repo.findByNews(newsId, skip, limit);
@@ -22,11 +24,8 @@ async function getByNews(newsId, query) {
 }
 
 async function create(dto, user) {
-  const news = await prisma.news.findUnique({
-    where: { id: dto.newsId },
-    select: { id: true, status: true },
-  });
-  if (!news || news.status !== 'PUBLISHED') throw new AppError('News not found', 404);
+  const [item] = await db.select({ id: news.id, status: news.status }).from(news).where(eq(news.id, dto.newsId)).limit(1);
+  if (!item || item.status !== 'PUBLISHED') throw new AppError('News not found', 404);
 
   return repo.create({
     newsId: dto.newsId,

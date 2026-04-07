@@ -1,58 +1,67 @@
-const prisma = require('../../config/database');
+const { eq, and, count, desc, asc } = require('drizzle-orm');
+const { db } = require('../../db');
+const { comments, news } = require('../../db/schema');
+
+const COMMENT_COLS = {
+  id: comments.id, content: comments.content, username: comments.username,
+  createdAt: comments.createdAt, userId: comments.userId, newsId: comments.newsId,
+};
 
 async function findByNews(newsId, skip, take) {
-  const [data, total] = await prisma.$transaction([
-    prisma.comment.findMany({
-      where: { newsId, isDeleted: false },
-      orderBy: { createdAt: 'desc' },
-      skip,
-      take,
-      select: { id: true, content: true, username: true, createdAt: true, userId: true },
-    }),
-    prisma.comment.count({ where: { newsId, isDeleted: false } }),
+  const where = and(eq(comments.newsId, newsId), eq(comments.isDeleted, false));
+
+  const [data, [{ total }]] = await Promise.all([
+    db.select(COMMENT_COLS).from(comments).where(where)
+      .orderBy(desc(comments.createdAt)).limit(take).offset(skip),
+    db.select({ total: count() }).from(comments).where(where),
   ]);
-  return { data, total };
+
+  return { data, total: Number(total) };
 }
 
 async function findById(id) {
-  return prisma.comment.findUnique({ where: { id } });
+  const [row] = await db.select().from(comments).where(eq(comments.id, id)).limit(1);
+  return row || null;
 }
 
 async function create(data) {
-  return prisma.comment.create({
-    data,
-    select: { id: true, content: true, username: true, createdAt: true, newsId: true },
+  const [row] = await db.insert(comments).values(data).returning({
+    id: comments.id, content: comments.content, username: comments.username,
+    createdAt: comments.createdAt, newsId: comments.newsId,
   });
+  return row;
 }
 
 async function softDelete(id) {
-  return prisma.comment.update({ where: { id }, data: { isDeleted: true } });
+  return db.update(comments).set({ isDeleted: true }).where(eq(comments.id, id));
 }
 
 async function findAll(skip, take, orderBy, onlyPublished = true) {
-  const where = {
-    isDeleted: false,
-    ...(onlyPublished ? { news: { status: 'PUBLISHED' } } : {}),
-  };
+  const baseWhere = eq(comments.isDeleted, false);
 
-  const [data, total] = await prisma.$transaction([
-    prisma.comment.findMany({
-      where,
-      orderBy,
-      skip,
-      take,
-      select: {
-        id: true,
-        content: true,
-        username: true,
-        createdAt: true,
-        userId: true,
-        newsId: true,
-      },
-    }),
-    prisma.comment.count({ where }),
+  // For count and data we need to optionally join news
+  if (onlyPublished) {
+    const where = and(baseWhere, eq(news.status, 'PUBLISHED'));
+    const [data, [{ total }]] = await Promise.all([
+      db.select(COMMENT_COLS).from(comments)
+        .innerJoin(news, eq(comments.newsId, news.id))
+        .where(where)
+        .orderBy(orderBy === 'asc' ? asc(comments.createdAt) : desc(comments.createdAt))
+        .limit(take).offset(skip),
+      db.select({ total: count() }).from(comments)
+        .innerJoin(news, eq(comments.newsId, news.id))
+        .where(where),
+    ]);
+    return { data, total: Number(total) };
+  }
+
+  const [data, [{ total }]] = await Promise.all([
+    db.select(COMMENT_COLS).from(comments).where(baseWhere)
+      .orderBy(orderBy === 'asc' ? asc(comments.createdAt) : desc(comments.createdAt))
+      .limit(take).offset(skip),
+    db.select({ total: count() }).from(comments).where(baseWhere),
   ]);
-  return { data, total };
+  return { data, total: Number(total) };
 }
 
-module.exports = { findAll, findByNews, findById, create, softDelete };
+module.exports = { findByNews, findById, create, softDelete, findAll };

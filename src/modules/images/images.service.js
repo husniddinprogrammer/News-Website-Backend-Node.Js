@@ -1,7 +1,9 @@
 const path = require('path');
 const fs = require('fs');
 const sharp = require('sharp');
-const prisma = require('../../config/database');
+const { eq } = require('drizzle-orm');
+const { db } = require('../../db');
+const { news } = require('../../db/schema');
 const { AppError } = require('../../middleware/error.middleware');
 const logger = require('../../utils/logger');
 const config = require('../../config');
@@ -35,9 +37,9 @@ async function compressIfNeeded(file) {
 }
 
 async function upload(newsId, files, user) {
-  const news = await prisma.news.findUnique({ where: { id: newsId }, select: { id: true, authorId: true } });
-  if (!news) throw new AppError('News not found', 404);
-  if (user.role === 'ADMIN' && news.authorId !== user.id) {
+  const [item] = await db.select({ id: news.id, authorId: news.authorId }).from(news).where(eq(news.id, newsId)).limit(1);
+  if (!item) throw new AppError('News not found', 404);
+  if (user.role === 'ADMIN' && item.authorId !== user.id) {
     throw new AppError('You can only upload images to your own news', 403);
   }
 
@@ -53,8 +55,8 @@ async function upload(newsId, files, user) {
 }
 
 async function getByNews(newsId) {
-  const news = await prisma.news.findUnique({ where: { id: newsId }, select: { id: true } });
-  if (!news) throw new AppError('News not found', 404);
+  const [item] = await db.select({ id: news.id }).from(news).where(eq(news.id, newsId)).limit(1);
+  if (!item) throw new AppError('News not found', 404);
   return repo.findByNews(newsId);
 }
 
@@ -62,8 +64,8 @@ async function remove(imageId, user) {
   const image = await repo.findById(imageId);
   if (!image || image.isDeleted) throw new AppError('Image not found', 404);
 
-  const news = await prisma.news.findUnique({ where: { id: image.newsId }, select: { authorId: true } });
-  if (user.role === 'ADMIN' && news?.authorId !== user.id) {
+  const [item] = await db.select({ authorId: news.authorId }).from(news).where(eq(news.id, image.newsId)).limit(1);
+  if (user.role === 'ADMIN' && item?.authorId !== user.id) {
     throw new AppError('You can only delete images from your own news', 403);
   }
 

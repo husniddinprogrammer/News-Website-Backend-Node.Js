@@ -16,25 +16,17 @@ function notFound(req, res, _next) {
  */
 // eslint-disable-next-line no-unused-vars
 function globalErrorHandler(err, req, res, _next) {
-  // Prisma known errors
-  if (err.code === 'P2002') {
-    const field = err.meta?.target?.join(', ') || 'field';
+  // PostgreSQL unique constraint violation
+  if (err.code === '23505') {
     return res.status(409).json({
       success: false,
       statusCode: 409,
-      message: `Duplicate value for unique ${field}`,
+      message: 'Duplicate value for unique field',
     });
   }
 
-  if (err.code === 'P2025') {
-    return res.status(404).json({
-      success: false,
-      statusCode: 404,
-      message: err.meta?.cause || 'Record not found',
-    });
-  }
-
-  if (err.code === 'P2003') {
+  // PostgreSQL foreign key violation
+  if (err.code === '23503') {
     return res.status(400).json({
       success: false,
       statusCode: 400,

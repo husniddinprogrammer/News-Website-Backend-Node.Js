@@ -67,7 +67,7 @@ router.post('/', authenticate, authorize('BOSS'), validate(v.create), controller
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string, format: uuid }
+ *         schema: { type: integer }
  *     responses:
  *       204:
  *         description: Deleted

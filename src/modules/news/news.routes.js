@@ -91,7 +91,7 @@ router.get('/slug/:slug', publicLimiter, controller.getBySlug);
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string, format: uuid }
+ *         schema: { type: integer }
  *     responses:
  *       200:
  *         description: News detail
@@ -115,7 +115,7 @@ router.get('/:id', authenticate, authorize('BOSS', 'ADMIN'), controller.getById)
  *               title: { type: string }
  *               content: { type: string }
  *               shortDescription: { type: string }
- *               categoryId: { type: string, format: uuid }
+ *               categoryId: { type: integer }
  *               status: { type: string, enum: [DRAFT, PUBLISHED] }
  *               hashtags: { type: array, items: { type: string } }
  *     responses:
@@ -134,7 +134,7 @@ router.post('/', authenticate, authorize('BOSS', 'ADMIN'), validate(v.create), c
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string, format: uuid }
+ *         schema: { type: integer }
  *     responses:
  *       200:
  *         description: Updated
@@ -151,7 +151,7 @@ router.put('/:id', authenticate, authorize('BOSS', 'ADMIN'), validate(v.update),
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string, format: uuid }
+ *         schema: { type: integer }
  *     responses:
  *       204:
  *         description: Deleted

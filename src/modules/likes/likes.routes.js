@@ -29,7 +29,7 @@ const router = Router();
  *             type: object
  *             required: [newsId]
  *             properties:
- *               newsId: { type: string, format: uuid }
+ *               newsId: { type: integer }
  *     responses:
  *       200:
  *         description: Returns liked status and total count

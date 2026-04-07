@@ -45,7 +45,7 @@ const options = {
         User: {
           type: 'object',
           properties: {
-            id: { type: 'string', format: 'uuid' },
+            id: { type: 'integer' },
             username: { type: 'string' },
             email: { type: 'string', format: 'email' },
             role: { type: 'string', enum: ['BOSS', 'ADMIN'] },
@@ -58,7 +58,7 @@ const options = {
         News: {
           type: 'object',
           properties: {
-            id: { type: 'string', format: 'uuid' },
+            id: { type: 'integer' },
             title: { type: 'string' },
             slug: { type: 'string' },
             content: { type: 'string' },
@@ -72,7 +72,7 @@ const options = {
         Category: {
           type: 'object',
           properties: {
-            id: { type: 'string', format: 'uuid' },
+            id: { type: 'integer' },
             name: { type: 'string' },
             slug: { type: 'string' },
             isDeleted: { type: 'boolean' },
@@ -81,7 +81,7 @@ const options = {
         Comment: {
           type: 'object',
           properties: {
-            id: { type: 'string', format: 'uuid' },
+            id: { type: 'integer' },
             newsId: { type: 'string' },
             userId: { type: 'string' },
             content: { type: 'string' },

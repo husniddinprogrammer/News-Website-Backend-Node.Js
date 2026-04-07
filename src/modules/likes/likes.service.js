@@ -1,13 +1,12 @@
-const prisma = require('../../config/database');
+const { eq } = require('drizzle-orm');
+const { db } = require('../../db');
+const { news } = require('../../db/schema');
 const { AppError } = require('../../middleware/error.middleware');
 const repo = require('./likes.repository');
 
 async function toggle(newsId, user, ipAddress) {
-  const news = await prisma.news.findUnique({
-    where: { id: newsId },
-    select: { id: true, status: true },
-  });
-  if (!news || news.status !== 'PUBLISHED') throw new AppError('News not found', 404);
+  const [item] = await db.select({ id: news.id, status: news.status }).from(news).where(eq(news.id, newsId)).limit(1);
+  if (!item || item.status !== 'PUBLISHED') throw new AppError('News not found', 404);
 
   const userId = user?.id || null;
   const existing = await repo.findLike(newsId, userId, ipAddress);

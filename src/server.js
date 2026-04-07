@@ -3,7 +3,7 @@ const http = require('http');
 const app = require('./app');
 const config = require('./config');
 const logger = require('./utils/logger');
-const prisma = require('./config/database');
+const { connectDb, disconnectDb } = require('./db');
 const { connectElasticsearch } = require('./config/elasticsearch');
 
 const server = http.createServer(app);
@@ -11,7 +11,7 @@ const server = http.createServer(app);
 async function start() {
   try {
     // Verify DB connection
-    await prisma.$connect();
+    await connectDb();
     logger.info('PostgreSQL connected');
 
     // Optional services (non-fatal)
@@ -32,8 +32,8 @@ async function start() {
 async function shutdown(signal) {
   logger.info(`${signal} received — shutting down gracefully`);
   server.close(async () => {
-    await prisma.$disconnect();
-    logger.info('Prisma disconnected');
+    await disconnectDb();
+    logger.info('Database disconnected');
     process.exit(0);
   });
 

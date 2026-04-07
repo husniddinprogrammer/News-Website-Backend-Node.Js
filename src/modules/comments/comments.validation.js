@@ -1,7 +1,7 @@
 const Joi = require('joi');
 
 const create = Joi.object({
-  newsId: Joi.string().uuid().required(),
+  newsId: Joi.number().integer().positive().required(),
   content: Joi.string().min(1).max(2000).required(),
 });
 

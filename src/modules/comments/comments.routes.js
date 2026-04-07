@@ -24,7 +24,7 @@ const router = Router();
  *       - in: path
  *         name: newsId
  *         required: true
- *         schema: { type: string, format: uuid }
+ *         schema: { type: integer }
  *       - in: query
  *         name: page
  *         schema: { type: integer }
@@ -52,7 +52,7 @@ router.get('/news/:newsId', validate(v.listQuery, 'query'), controller.getByNews
  *             type: object
  *             required: [newsId, content]
  *             properties:
- *               newsId: { type: string, format: uuid }
+ *               newsId: { type: integer }
  *               content: { type: string }
  *     responses:
  *       201:
@@ -72,7 +72,7 @@ router.post('/', authenticate, validate(v.create), controller.create);
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string, format: uuid }
+ *         schema: { type: integer }
  *     responses:
  *       204:
  *         description: Deleted
