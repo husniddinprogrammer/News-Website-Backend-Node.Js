@@ -48,19 +48,22 @@ function buildNewsFilter(query, user) {
   }
 
   // ── Kategoriya filtri ─────────────────────────────────────────────────────
-  // categories jadvali news.repository.js da LEFT JOIN qilingan
   if (query.category && query.category !== 'all') {
-    conditions.push(eq(categories.slug, query.category));
+    const catSub = db
+      .select({ id: categories.id })
+      .from(categories)
+      .where(eq(categories.slug, query.category));
+    conditions.push(inArray(news.categoryId, catSub));
   }
 
   // ── Hashtag filtri ────────────────────────────────────────────────────────
   if (query.hashtag && query.hashtag !== 'all') {
-    const sub = db
+    const tagSub = db
       .select({ newsId: hashtagNews.newsId })
       .from(hashtagNews)
       .innerJoin(hashtags, eq(hashtagNews.hashtagId, hashtags.id))
       .where(and(eq(hashtags.slug, query.hashtag), eq(hashtagNews.isDeleted, false)));
-    conditions.push(inArray(news.id, sub));
+    conditions.push(inArray(news.id, tagSub));
   }
 
   const where = conditions.length === 0
